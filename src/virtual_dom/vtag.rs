@@ -321,6 +321,13 @@ impl<COMP: Component> VTag<COMP> {
     }
 }
 
+fn is_svg(val: &str) -> bool {
+    match val {
+        "svg" | "circle" | "rect" | "path" | "g" | "ellipse" | "image" | "line" | "path" | "text" => true,
+        _ => false
+    }
+}
+
 impl<COMP: Component> VDiff for VTag<COMP> {
     type Component = COMP;
 
@@ -377,9 +384,13 @@ impl<COMP: Component> VDiff for VTag<COMP> {
         match reform {
             Reform::Keep => {}
             Reform::Before(before) => {
-                let element = document()
+                let element = if is_svg(&self.tag) {
+                    document().create_element_ns("http://www.w3.org/2000/svg", &self.tag).expect("tried and failed to create svg")
+                } else {
+                    document()
                     .create_element(&self.tag)
-                    .expect("can't create element for vtag");
+                    .expect("can't create element for vtag")
+                };
                 if let Some(sibling) = before {
                     parent
                         .insert_before(&element, &sibling)
